@@ -29,6 +29,10 @@ WORKDIR /root/noVNC
 # Configure Supervisor to manage Xvfb, Fluxbox, x11vnc, Firefox, and noVNC
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Force Firefox to use software rendering to save memory
+ENV MOZ_ENABLE_WAYLAND=0
+ENV MOZ_WEBRENDER=0
+
 # Render assigns a dynamic port via $PORT environment variable
 EXPOSE 8080
 
