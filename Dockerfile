@@ -26,5 +26,5 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Render assigns a dynamic port via $PORT environment variable
 EXPOSE 8080
 
-# Entrypoint script to substitute PORT and run supervisor
-CMD ["/bin/bash", "-c", "sed -i 's/PORT/\\'$PORT'/' /etc/supervisor/conf.d/supervisord.conf && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+# Entrypoint script to substitute PORT and run supervisor safely
+CMD ["/bin/bash", "-c", "sed -i \"s/PORT/$PORT/g\" /etc/supervisor/conf.d/supervisord.conf && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
