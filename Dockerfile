@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 # Prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies, Xvfb, X11VNC, noVNC, fluxbox, and Firefox
+# Install system dependencies, Xvfb, X11VNC, noVNC, fluxbox, and supervisor
 RUN apt-get update && apt-get install -y \
     xvfb \
     x11vnc \
@@ -13,9 +13,15 @@ RUN apt-get update && apt-get install -y \
     git \
     novnc \
     websockify \
-    firefox \
     supervisor \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
+
+# Add official Mozilla PPA to get the non-snap version of Firefox
+RUN add-apt-repository ppa:mozillateam/ppa -y && \
+    echo 'Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001' > /etc/apt/preferences.d/mozilla-firefox && \
+    apt-get update && apt-get install -y firefox && \
+    rm -rf /var/lib/apt/lists/*
 
 # Setup a working directory for noVNC
 WORKDIR /root/noVNC
