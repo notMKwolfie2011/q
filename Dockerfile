@@ -1,9 +1,8 @@
 FROM ubuntu:22.04
 
-# Prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies, Xvfb, X11VNC, noVNC, fluxbox, and supervisor
+# Install dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     xvfb \
     x11vnc \
@@ -12,29 +11,31 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     novnc \
-    websockify \
     supervisor \
     software-properties-common \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Add official Mozilla PPA to get the non-snap version of Firefox
+# Install the proxy library needed for our bridge script
+RUN npm install -g http-proxy
+
+# Add non-snap Firefox
 RUN add-apt-repository ppa:mozillateam/ppa -y && \
     echo 'Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001' > /etc/apt/preferences.d/mozilla-firefox && \
     apt-get update && apt-get install -y firefox && \
     rm -rf /var/lib/apt/lists/*
 
-# Setup a working directory for noVNC
 WORKDIR /root/noVNC
 
-# Configure Supervisor to manage Xvfb, Fluxbox, x11vnc, Firefox, and noVNC
+# Copy all configuration files
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY bridge.js /root/noVNC/bridge.js
 
-# Force Firefox to use software rendering to save memory
-ENV MOZ_ENABLE_WAYLAND=0
-ENV MOZ_WEBRENDER=0
+# Link global modules so our script can find http-proxy
+ENV NODE_PATH=/usr/local/lib/node_modules
 
-# Render assigns a dynamic port via $PORT environment variable
+# Ensure Back4app detects the main port
 EXPOSE 8080
 
-# Entrypoint script to substitute PORT and run supervisor safely
-CMD ["/bin/bash", "-c", "sed -i \"s/PORT/$PORT/g\" /etc/supervisor/conf.d/supervisord.conf && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
